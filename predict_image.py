@@ -18,7 +18,7 @@ def remove_dup():
   seen_names = []
   dupes = []
   for fn_id in range(1, 30001):
-    fn = "../data/train/train%d.aiff" % fn_id
+    fn = "data/train/train%d.aiff" % fn_id
     contents = open(fn).read()
     if contents in seen:
       dupes.append(fn)
@@ -79,14 +79,14 @@ def filter_specgrams_train(seen):
   nfeatures = 129 * 30
 
   # First create trainY
-  f = pandas.read_csv("../data/train.csv")
+  f = pandas.read_csv("data/train.csv")
   trainY = f["label"]
   trainY = trainY.ix[map(lambda x: x - 1, seen)]
 
   # Next read Train data
   trainX = numpy.zeros(train_dim * nfeatures).reshape(train_dim, nfeatures)
   for i in range(0, len(seen)):
-    sp = specgram("../data/train/train%d.aiff" % seen[i]) 
+    sp = specgram("data/train/train%d.aiff" % seen[i]) 
     y = signal.wiener(sp)
     print y.shape
     trainX[i, :] = y.reshape(nfeatures)
@@ -100,7 +100,7 @@ def filter_specgrams_test():
 
   testX = numpy.zeros(test_dim * nfeatures).reshape(test_dim, nfeatures)
   for i in range(0, test_dim): 
-    sp = specgram("../data/test/test%d.aiff" % (i+1))
+    sp = specgram("data/test/test%d.aiff" % (i+1))
     y = signal.wiener(sp)
     print y.shape
     testX[i, :] = y.reshape(nfeatures)
@@ -115,21 +115,37 @@ if __name__ == "__main__":
   # Read train data and fit model
   (trainX, trainY) = filter_specgrams_train(seen)
   print "trainX: " + str(trainX.shape)
-  print "trainY: " + str(trainY.shape) 
-  # Read test data and fit model
-  testX = filter_specgrams_test()
-  print "testX: " + str(testX.shape)
+  print "trainY: " + str(trainY.shape)  
  
+  # Read test data and fit model
+  #testX = filter_specgrams_test()
+  #print "testX: " + str(testX.shape) 
+
   # Scale train and test
   print "Computing scaler"
   scaler = preprocessing.StandardScaler().fit(trainX)
   print "Scaling trainX"
   trainX = scaler.transform(trainX)
   print "Scaling testX"
-  testX = scaler.transform(testX)
+  #testX = scaler.transform(testX)
 
-  t = ensemble.GradientBoostingClassifier(n_estimators=int(sys.argv[1]), verbose=1, max_depth=6, min_samples_leaf=5)
-  t.fit(trainX, trainY)
-  p = t.predict_proba(testX)
-  numpy.savetxt(sys.argv[2], p[:, 1].astype(float), fmt='%1.10f', delimiter=",")
+  sudeepX, int_testX, sudeepY, int_testY = cross_validation.train_test_split(trainX, trainY, test_size=0.2)
+  int_trainX, int_validX, int_trainY, int_validY = cross_validation.train_test_split(sudeepX, sudeepY, test_size=0.2)
+
+  train_size = len(int_trainY)
+  all_train = numpy.hstack((int_trainY.reshape(train_size, 1), int_trainX)) 
+  numpy.savetxt("features/train.csv", all_train, delimiter=",")
+
+  valid_size = len(int_validY)
+  all_valid = numpy.hstack((int_validY.reshape(valid_size, 1), int_validX))
+  numpy.savetxt("features/valid.csv", all_valid, delimiter=",")
+
+  test_size = len(int_testY)
+  all_test = numpy.hstack((int_testY.reshape(test_size, 1), int_testX))
+  numpy.savetxt("features/test.csv", all_test, delimiter=",")
+ 
+  #t = ensemble.GradientBoostingClassifier(n_estimators=int(sys.argv[1]), verbose=1, max_depth=6, min_samples_leaf=5)
+  #t.fit(trainX, trainY)
+  #p = t.predict_proba(testX)
+  #numpy.savetxt(sys.argv[2], p[:, 1].astype(float), fmt='%1.10f', delimiter=",")
 
