@@ -39,7 +39,7 @@ def specgram(filename):
   a = pylab.specgram(x)
   return a[0]
 
-def specgram_large:
+def specgram_large():
   nfft=256;
   nt=20;
   fs=2000;
