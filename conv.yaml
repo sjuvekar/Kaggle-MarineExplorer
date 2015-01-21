@@ -1,6 +1,6 @@
 !obj:pylearn2.train.Train {
     dataset: &train !obj:pylearn2.datasets.csv_dataset.CSVDataset {
-      path: 'features/train.csv'
+      path: 'features/img_train.csv'
     },
     model: !obj:pylearn2.models.mlp.MLP {
       input_space: !obj:pylearn2.space.Conv2DSpace {
@@ -9,25 +9,36 @@
       },
       layers: [
          !obj:pylearn2.models.mlp.ConvRectifiedLinear {
+       layer_name: 'h0',
+       output_channels: 32,
+       kernel_shape: [5, 5],
+       pool_shape: [3, 3],
+       pool_stride: [2, 2],
+       border_mode: "full",
+       irange: .0001
+         },
+        !obj:pylearn2.models.mlp.ConvRectifiedLinear {
+       layer_name: 'h1',
+       output_channels: 32,
+       kernel_shape: [5, 5],
+       pool_shape: [3, 3],
+       pool_stride: [2, 2],
+       border_mode: "full",
+       irange: .01
+         },
+        !obj:pylearn2.models.mlp.ConvRectifiedLinear {
        layer_name: 'h2',
        output_channels: 64,
        kernel_shape: [5, 5],
-       pool_shape: [4, 4],
+       pool_shape: [3, 3],
        pool_stride: [2, 2],
-       irange: .05
-         },
-        !obj:pylearn2.models.mlp.ConvRectifiedLinear {
-       layer_name: 'h4',
-       output_channels: 64,
-       kernel_shape: [5, 5],
-       pool_shape: [4, 4],
-       pool_stride: [2, 2],
-       irange: .05
+       border_mode: "full",
+       irange: .01
          },
        !obj:pylearn2.models.mlp.Sigmoid {
-      layer_name: 'h0',
-      dim: 1000,
-      irange: 0.05
+      layer_name: 'h3',
+      dim: 5000,
+      irange: 0.01
       },
          !obj:pylearn2.models.mlp.Softmax {
        layer_name: 'y',
@@ -38,7 +49,7 @@
     },
     algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
       batch_size: 50,
-      learning_rate: .2,
+      learning_rate: .5,
       learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {
     init_momentum: 0.5,
       },
@@ -46,17 +57,17 @@
     {
         'train' : *train,
         'valid' : !obj:pylearn2.datasets.csv_dataset.CSVDataset {
-          path: 'features/valid.csv'
+          path: 'features/img_valid.csv'
         },
         'test'  : !obj:pylearn2.datasets.csv_dataset.CSVDataset {
-          path: 'features/test.csv'
+          path: 'features/img_test.csv'
         }
     },
       cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
     !obj:pylearn2.costs.cost.MethodCost {
         method: 'cost_from_X'
     }, !obj:pylearn2.costs.mlp.WeightDecay {
-        coeffs: [ .00005, .00005, .00005, .00005 ]
+        coeffs: [ .00005, .00005, .00005, .00005, .00005 ]
     }
   ]
       },
