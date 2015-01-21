@@ -3,8 +3,9 @@ import numpy
 
 TEST_FRAC = 0.15
 df = pandas.read_csv("total.csv")
+df[df.columns[1:]] = (df[df.columns[1:]] + 255.) / 255.
 l = len(df)
-test_len = int(l * test_frac)
+test_len = int(l * TEST_FRAC)
 
 idx = list(df.index)
 numpy.random.shuffle(idx)
